@@ -82,9 +82,9 @@ public class QnI {
 	 * @param ip 
 	 * @return
 	 */
-	public static HashMap<String,Integer> getServerSizeAndIndex(String ip) {
+	public static HashMap<String,Integer> getServerSizeAndIndex() {
 		try {
-			return localHandler.getIndexAndServerTotal(ip);
+			return localHandler.getIndexAndServerTotal(Util.getLocalIP());
 		} catch (Exception e) {
 			e.printStackTrace();
 			StringWriter sw = new StringWriter();
