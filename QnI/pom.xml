@@ -1,6 +1,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>sf.ibu.qni</groupId>
+	<groupId>trieyes.qni</groupId>
 	<artifactId>QnI</artifactId>
 	<packaging>jar</packaging>
 	<version>1.0.8</version>
@@ -9,18 +9,6 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
-	<repositories>
-		<repository>
-			<id>sf_release</id>
-			<name>sf_release</name>
-			<url>http://nexus.sf-express.com:8080/nexus/content/repositories/releases/</url>
-		</repository>
-		<repository>
-			<id>nexus2</id>
-			<name>Team Nexus Repository2</name>
-			<url>http://nexus.sf-express.com:8080/nexus/content/repositories/thirdparty</url>
-		</repository>
-	</repositories>
 	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>
@@ -75,17 +63,24 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>  
+                <groupId>org.apache.maven.plugins</groupId>  
+                <artifactId>maven-dependency-plugin</artifactId>  
+                <version>2.10</version>  
+                <executions>  
+                    <execution>  
+                        <id>copy-dependencies</id>  
+                        <phase>package</phase>  
+                        <goals>  
+                            <goal>copy-dependencies</goal>  
+                        </goals>  
+                        <configuration>  
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>  
+                        </configuration>  
+                    </execution>  
+                </executions>  
             </plugin> 
         </plugins>  
 </build>  
-<distributionManagement>
-	<repository>
-		<id>nexus-releases</id>
-		<url>http://nexus.sf-express.com:8080/nexus/content/repositories/releases/</url>
-	</repository>
-	<snapshotRepository>
-		<id>nexus-snapshots</id>
-		<url>http://nexus.sf-express.com:8080/nexus/content/repositories/snapshots/</url>
-	</snapshotRepository>
-	</distributionManagement>
 </project>
