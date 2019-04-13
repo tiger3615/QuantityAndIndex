@@ -1,10 +1,10 @@
-package sf.ibu.qni.core;
+package trieyes.qni.core;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 
-import sf.ibu.qni.common.Util;
+import trieyes.qni.common.Util;
 
 public class Conf {
 	private JSONObject confJson;
@@ -22,7 +22,7 @@ public class Conf {
 	}
 
 	private void refresh() throws JSONException, Exception {
-		String configureFile = Conf.class.getResource("/NetFileSearch.json").toURI().getPath();
+		String configureFile = Conf.class.getResource("/QnI.json").toURI().getPath();
 		confJson = JSONObject.parseObject(Util.file2String(configureFile));
 	}
 
@@ -34,10 +34,13 @@ public class Conf {
 		return confJson.getIntValue("port");
 	}
 
-	public long getScanServerIntervalms() {
-		return confJson.getLongValue("scanServerIntervalms");
+	public long getScanServerIntervalMs() {
+		return confJson.getLongValue("scanServerIntervalMs");
 	}
-
+	
+	public long getRegisterIntervalMsMs() {
+		return confJson.getLongValue("registerIntervalMs");
+	}
 	public JSONObject getConfJson() {
 		return confJson;
 	}

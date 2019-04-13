@@ -1,17 +1,17 @@
-package sf.ibu.eric.common;
+package trieyes.QnI.common;
 
-import org.junit.Assert;
-import org.junit.Test;
-
-import sf.ibu.qni.common.Util;
-import sf.ibu.qni.core.QnI;
+import trieyes.qni.core.QnI;
 
 public class UtilTest {
 	
 	public static void main(String []a) {
 		try {
 			QnI.init();
-//			System.out.println(QnI.getServerSizeAndIndex("100.200.5.31"));
+			while(true) {
+				System.out.println(String.format("servers %d, index %d", QnI.getServerQuantity(),QnI.getSelfIndex()));
+				Thread.sleep(1000);
+			}
+//			System.out.println(QnI.getServerSizeAndIndex());
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

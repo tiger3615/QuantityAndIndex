@@ -1,5 +1,6 @@
 {
 	"IPs":["100.120.5.13","100.120.5.31"],
 	"port":2001,
-	"scanServerIntervalms":1000
+	"scanServerIntervalMs":2000,
+	"registerIntervalMs":1000
 }

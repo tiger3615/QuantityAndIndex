@@ -1,17 +1,17 @@
-package sf.ibu.qni.core.server;
+package trieyes.qni.core.server;
 
 import java.net.Socket;
 
 import com.alibaba.fastjson.JSONObject;
 
-import sf.ibu.qni.common.Util;
+import trieyes.qni.common.ServerHandlerI;
+import trieyes.qni.common.Util;
 
-public class ServerHandler {
+public class ServerHandlerImpl implements ServerHandlerI{
 
-	public void handle(String message, Socket socket) throws Exception {
+	public void handle(String message, Socket socket) throws Throwable {
 		/*
-		 * message tpl { "type":"register", "info":{ "IP":"127.0.0.1", "port":2000,
-		 * "filePaths":["path1","path2"] } }
+		 * message tpl { "type":"register", "info":{ "IP":"127.0.0.1", "port":2000 } }
 		 */
 		JSONObject json = JSONObject.parseObject(message);
 		String type = json.getString("type");
@@ -25,6 +25,4 @@ public class ServerHandler {
 	public void register(JSONObject json) {
 		ServerCollection.put(json);
 	}
-
-
 }

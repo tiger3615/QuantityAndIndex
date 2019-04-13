@@ -1,4 +1,4 @@
-package sf.ibu.qni.common;
+package trieyes.qni.common;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;

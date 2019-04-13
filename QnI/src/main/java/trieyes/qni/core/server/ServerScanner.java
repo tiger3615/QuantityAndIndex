@@ -1,4 +1,4 @@
-package sf.ibu.qni.core.server;
+package trieyes.qni.core.server;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -8,8 +8,8 @@ import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSONArray;
 
-import sf.ibu.qni.common.Util;
-import sf.ibu.qni.core.Conf;
+import trieyes.qni.common.Util;
+import trieyes.qni.core.Conf;
 
 public class ServerScanner {
 	private static final Logger logger = LoggerFactory.getLogger(ServerScanner.class);
@@ -18,19 +18,16 @@ public class ServerScanner {
 	public static String getAvailableIP() {
 		return availableIP;
 	}
-
+	static long scanServerIntervalMs;
 	public static Thread scannerThread = new Thread() {
 		public void run() {
 			while (true) {
-				long scanServerIntervalms=1000*60;
 				try {
-					Conf conf = Conf.getIns();
-					scanServerIntervalms = conf.getScanServerIntervalms();
 					availableIP = findAvailableIP();
 				} catch (Throwable e) {
 					logger.error("", e);
 				}
-				Util.sleep(scanServerIntervalms);
+				Util.sleep(scanServerIntervalMs);
 			}
 		}
 	};
@@ -38,6 +35,10 @@ public class ServerScanner {
 		try {
 			availableIP = findAvailableIP();
 			scannerThread.setName("Thread_server_scanner");
+			//sleep for a while, then run thread. avoid call findAvailableIP twice at initial stage.
+			Conf conf = Conf.getIns();
+			scanServerIntervalMs = conf.getScanServerIntervalMs();
+			Util.sleep(scanServerIntervalMs);
 			scannerThread.start();
 		} catch (Exception e) {
 			logger.error("", e);
@@ -53,7 +54,8 @@ public class ServerScanner {
 				return ip;
 			}
 		}
-		return ipArr.getString(0);
+		//if there is no available IP. call local IP
+		return Util.getLocalIP();
 	}
 	public static boolean ping(String ip, int port) {
 		try {

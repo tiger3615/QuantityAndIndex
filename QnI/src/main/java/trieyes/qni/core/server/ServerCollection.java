@@ -1,8 +1,7 @@
-package sf.ibu.qni.core.server;
+package trieyes.qni.core.server;
 
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,15 +9,17 @@ import org.slf4j.LoggerFactory;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
-import sf.ibu.qni.common.Util;
-import sf.ibu.qni.core.Conf;
+import trieyes.qni.common.Util;
+import trieyes.qni.core.Conf;
 
 public class ServerCollection {
-	public static HashMap<String, JSONObject> serverMap = new HashMap<String, JSONObject>();
+	//map makes new IP as key overwrite previous one
+	private static HashMap<String, JSONObject> serverMap = new HashMap<String, JSONObject>();
 	private static final Logger logger = LoggerFactory.getLogger(ServerCollection.class);
+	private static ReentrantReadWriteLock rrw = new ReentrantReadWriteLock();
 	static {
 		/*
-		 * tpl { "IP":"127.0.0.1", "port":2000, "filePaths":["path1","path2"] } }
+		 * tpl { "IP":"127.0.0.1", "port":2000, "birthDay":22222L } }
 		 */
 		JSONObject self= new JSONObject();
 		Conf conf;
@@ -28,10 +29,9 @@ public class ServerCollection {
 			self.put("port", confJObj.getIntValue("port"));
 			self.put("IP", Util.getLocalIP());
 			put(self);
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			logger.error("",e);
 		}
-		
 	}
 
 	/**
@@ -41,7 +41,13 @@ public class ServerCollection {
 	public static void put(JSONObject serverInfoJObj) {
 		String ip = serverInfoJObj.getString("IP");
 		serverInfoJObj.put("birthDay", System.currentTimeMillis());
-		serverMap.put(ip, serverInfoJObj);
+		rrw.writeLock().lock();
+		try {
+			serverMap.put(ip, serverInfoJObj);
+		}finally {
+			rrw.writeLock().unlock();
+		}
+		
 	}
 
 	/**
@@ -50,15 +56,15 @@ public class ServerCollection {
 	 */
 	public static JSONArray getAllServers() {
 		JSONArray serversJarr = new JSONArray();
-		Set<String> ipKeys = serverMap.keySet();
-		Iterator<String> itor = ipKeys.iterator();
-		while (itor.hasNext()) {
-			String ipKey = itor.next();
-			JSONObject oneClient = serverMap.get(ipKey);
-			if (System.currentTimeMillis() - oneClient.getLong("birthDay") < 5 * 1000) {
-				serversJarr.add(oneClient);
-			}
-
+		rrw.readLock().lock();
+		try {
+			serverMap.forEach((k,oneClient)->{
+				if (System.currentTimeMillis() - oneClient.getLong("birthDay") < 5000) {
+					serversJarr.add(oneClient);
+				}
+			});
+		}finally {
+			rrw.readLock().unlock();
 		}
 		return serversJarr;
 	}

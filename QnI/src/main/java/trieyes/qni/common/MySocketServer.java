@@ -1,22 +1,19 @@
-package sf.ibu.qni.common;
+package trieyes.qni.common;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alibaba.fastjson.JSONObject;
-
-import sf.ibu.qni.core.server.ServerHandler;
+import trieyes.qni.core.server.ServerHandlerImpl;
 
 /**
  * 设置socke服务端，让其永不停止
  * 
- * @author 89003360
+ * @author cat555666@126.com
  *
  */
 public class MySocketServer {
@@ -24,12 +21,7 @@ public class MySocketServer {
 	private int port;
 	private String name;
 	private static final Logger logger = LoggerFactory.getLogger(MySocketServer.class);
-	private ServerHandler oneOffConnectionHandler;
-
-	/**
-	 * Storing message from terminal or terminal manger
-	 */
-	public ConcurrentHashMap<String, JSONObject> msgMap = new ConcurrentHashMap<String, JSONObject>();
+	private ServerHandlerI oneOffConnectionHandler;
 
 	public MySocketServer(int port, String name) throws Exception {
 		this.name = name;
@@ -49,7 +41,7 @@ public class MySocketServer {
 					try {
 						socket = server.accept();// 启动服务端
 						initClient(socket);// 初始化监听参数
-					} catch (Exception e) {
+					} catch (Throwable e) {
 						logger.error("", e);
 					}
 				}
@@ -70,15 +62,15 @@ public class MySocketServer {
 					if (oneOffConnectionHandler != null) {
 						oneOffConnectionHandler.handle(msgStr, socket);
 					}
-					System.out.println(name + ":" + port + " receive: " + msgStr);
-				} catch (Exception e) {
+					logger.debug("{}:{} receive:{}",name , port, msgStr);
+				} catch (Throwable e) {
 					StringWriter sw = new StringWriter();
 					PrintWriter pw = new PrintWriter(sw);
 					e.printStackTrace(pw);
 					String exceptionStack = sw.toString();
 					try {
 						Util.write(socket, exceptionStack);
-					} catch (Exception e1) {
+					} catch (Throwable e1) {
 						logger.error("", e1);
 					}
 					logger.error("", e);
@@ -89,11 +81,7 @@ public class MySocketServer {
 		thread.start();
 	}
 
-	public ConcurrentHashMap<String, JSONObject> getMsgMap() {
-		return msgMap;
-	}
-
-	public void setOneOffConnectionHandler(ServerHandler oneOffConnectionHandler) {
+	public void setOneOffConnectionHandler(ServerHandlerI oneOffConnectionHandler) {
 		this.oneOffConnectionHandler = oneOffConnectionHandler;
 	}
 

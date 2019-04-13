@@ -1,21 +1,17 @@
-package sf.ibu.qni.core;
-
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.net.Socket;
-import java.util.HashMap;
+package trieyes.qni.core;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
-import sf.ibu.qni.common.MySocketClient;
-import sf.ibu.qni.common.MySocketServer;
-import sf.ibu.qni.common.Util;
-import sf.ibu.qni.core.local.LocalHandler;
-import sf.ibu.qni.core.server.ServerHandler;
-import sf.ibu.qni.core.server.ServerScanner;
+import trieyes.qni.common.MySocketClient;
+import trieyes.qni.common.MySocketServer;
+import trieyes.qni.common.Util;
+import trieyes.qni.core.local.ServerListFetcher;
+import trieyes.qni.core.server.ServerHandlerImpl;
+import trieyes.qni.core.server.ServerScanner;
 
 /**
  * 
@@ -23,8 +19,7 @@ import sf.ibu.qni.core.server.ServerScanner;
  *
  */
 public class QnI {
-	private static LocalHandler localHandler = new LocalHandler();
-	private static boolean inited = false;
+	private static volatile boolean inited = false;
 	private static final Logger logger = LoggerFactory.getLogger(QnI.class);
 	
 	public static void init() {
@@ -41,7 +36,7 @@ public class QnI {
 					}
 				}
 			};
-			connectMonitorThread.setName("connectMonitorThread");
+			connectMonitorThread.setName("kick off");
 			connectMonitorThread.start();
 		}
 	}
@@ -51,6 +46,7 @@ public class QnI {
 	 * @throws Exception
 	 */
 	public static void register() throws Exception {
+		long registerIntervalMs=Conf.getIns().getRegisterIntervalMsMs();
 		while (true) {
 			try {
 				MySocketClient mySocketClient = new MySocketClient(ServerScanner.getAvailableIP(),Conf.getIns().getPort());
@@ -61,7 +57,7 @@ public class QnI {
 				jsonObject.put("type", "register");
 				JSONObject infoJObj=Conf.getIns().getConfJson();
 				
-				//clone one to avoid update orignal configure
+				//clone one to avoid update original configure
 				JSONObject infoJObjSending=new JSONObject();
 				infoJObjSending.put("IP", Util.getLocalIP());
 				infoJObjSending.put("port", infoJObj.getIntValue("port"));
@@ -73,25 +69,37 @@ public class QnI {
 			} catch (Throwable e) {
 				logger.error("",e);
 			}
-			Util.sleep(3 * 1000);//3秒
+			Util.sleep(registerIntervalMs);//3秒
 		}
 	}
 
-	/**
-	 * 查询服务器总数和自己所在位置
-	 * @param ip 
-	 * @return
-	 */
-	public static HashMap<String,Integer> getServerSizeAndIndex() {
-		try {
-			return localHandler.getIndexAndServerTotal(Util.getLocalIP());
-		} catch (Exception e) {
-			e.printStackTrace();
-			StringWriter sw = new StringWriter();
-			PrintWriter pw = new PrintWriter(sw);
-			e.printStackTrace(pw);
-			return new HashMap<String,Integer>();
+	public static int getServerQuantity() throws Exception {
+		JSONArray servers = ServerListFetcher.serversJSONArr;
+		if (servers == null) {
+			// anyway current server is running, so return 1.
+			return 1;
+		} else {
+			int serverQuantity = servers.size();
+			return serverQuantity > 0 ? serverQuantity : 1;
 		}
+	}
+
+	public static int getSelfIndex() {
+		String ip=Util.getLocalIP();
+		JSONArray servers = ServerListFetcher.serversJSONArr;
+		if ( servers == null) {
+			// anyway current server is running, so return 1.
+			return 0;
+		} else {
+			for (int i = 0; i < servers.size(); i++) {
+				JSONObject oneServerInfo = servers.getJSONObject(i);
+				if (ip.equals(oneServerInfo.getString("IP"))) {
+					return i;
+				}
+			}
+			return 0;
+		}
+		
 	}
 	
 	/**
@@ -99,12 +107,8 @@ public class QnI {
 	 * @throws Exception
 	 */
 	public static void startInnerServer() throws Exception {
-		if (Conf.getIns().contains(Util.getLocalIP())) {
-			MySocketServer mySocketServer = new MySocketServer(Conf.getIns().getPort(), "QnI server");
-			mySocketServer.setOneOffConnectionHandler(new ServerHandler());
-			mySocketServer.startListener();
-		}
-		
-
+		MySocketServer mySocketServer = new MySocketServer(Conf.getIns().getPort(), "QnI server");
+		mySocketServer.setOneOffConnectionHandler(new ServerHandlerImpl());
+		mySocketServer.startListener();
 	}
 }

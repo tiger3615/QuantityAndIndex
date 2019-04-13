@@ -1,4 +1,4 @@
-package sf.ibu.qni.common;
+package trieyes.qni.common;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -8,53 +8,48 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.SocketException;
 
-import sf.ibu.qni.common.Util;
+import trieyes.qni.common.Util;
 
 /**
  * 设置soket客服端，为心跳作准备
- * @author 89003360
+ * @author cat555666@126.com
  *
  */
 public class MySocketClient {
-	private String monitorCenter;
 
-	private int monitorPort;
+	private String targetIP;
+	private int targetPort;
 
 	private PrintWriter pw;
 	private BufferedReader br;
 	private Socket socket;
-	private InputStream iStream;
 
-	public MySocketClient(String monitorCenter, int monitorPort) {
-		this.monitorCenter = monitorCenter;
-		this.monitorPort = monitorPort;
+	public MySocketClient(String targetIP, int targetPort) {
+		this.targetIP = targetIP;
+		this.targetPort = targetPort;
 	}
 
 	//初始化一个soket客服端
 	public void init() throws Exception {
-		socket = new Socket(monitorCenter, monitorPort);
+		socket = new Socket(targetIP, targetPort);
 		OutputStream os = socket.getOutputStream();
 		pw = new PrintWriter(os);
-		iStream = socket.getInputStream();
-		br = new BufferedReader(new InputStreamReader(iStream));
+		InputStream is = socket.getInputStream();
+		br = new BufferedReader(new InputStreamReader(is));
 	}
-
+	//assure only one thread can call write(String v)
+	private Object writeLock=new Object();
 	public void write(String v) {
-		synchronized ("write" + this.hashCode()) {
+		synchronized (writeLock) {
 			Util.write(pw, v);
 		}
 	}
-
+	//assure only one thread can call read()
+	private Object readLock=new Object();
 	public String read() throws Exception {
-		synchronized ("read" + this.hashCode()) {
-			try {
-				return Util.read(br);
-			} catch (SocketException e) {
-				Thread.sleep(1000 * 10);
-				throw e;
-			}
+		synchronized (readLock) {
+			return Util.read(br);
 		}
-
 	}
 
 	public void shutdown() throws Exception {
