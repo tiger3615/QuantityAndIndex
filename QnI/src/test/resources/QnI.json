@@ -1,5 +1,5 @@
 {
-	"IPs":["100.120.5.13","100.120.5.31"],
+	"IPs":["192.168.1.104","100.120.5.31"],
 	"port":2001,
 	"scanServerIntervalMs":2000,
 	"registerIntervalMs":1000
